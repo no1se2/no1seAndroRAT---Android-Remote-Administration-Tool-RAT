@@ -5,6 +5,7 @@ import time
 import shutil
 import stat
 import subprocess
+import apt
 
 init(autoreset=True)
 
@@ -105,8 +106,24 @@ def checks():
     except FileNotFoundError:
         print(f"{Fore.RED}The 'java' command is not found. Please make sure Java is installed.")
 
-    
+    cache = apt.Cache()
+    if cache['apksigner'].is_installed:
+        print(f"{Fore.GREEN}apksigner found!")
+        time.sleep(1)
+    else:
+        print(f"{Fore.RED}Can't find apksigner. Hold on I'm installing it")
+        time.sleep(2)
+        os.system("apt install apksigner -y")
         
+    if cache['zipalign'].is_installed:
+        print(f"{Fore.GREEN}zipalign found!")
+        time.sleep(1)
+    else:
+        print(f"{Fore.RED}Can't find zipalign. Hold on I'm installing it")
+        time.sleep(2)
+        os.system("dpkg -i src/zipalign_8.1.0+r23-2_amd64.deb")
+            #I hate life people don't understand me :( 
+
 
 
 def generate_payload():

